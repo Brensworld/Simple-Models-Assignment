@@ -103,6 +103,7 @@ const hostPage3 = (req, res) => {
 
 const hostPage4=async (req,res)=>{
   try{
+    //find all dogs in the database and send them to page4
     const docs=await Dog.find({}).lean().exec();
     return res.render('page4',{dogs:docs,title:'Dogs'});
   }catch(err){
@@ -198,10 +199,13 @@ const setName = async (req, res) => {
 
 
 const setDogName=async (req,res)=>{
+
+  //making sure all variables are there
   if (!req.body.firstname || !req.body.lastname || !req.body.breed || !req.body.age) {
     return res.status(400).json({ error: 'firstname, lastname, breed and age are all required' });
   }
 
+  //setting up new data and schema
   const dogData={
     name:`${req.body.firstname} ${req.body.lastname}`,
     breed:req.body.breed,
@@ -209,6 +213,7 @@ const setDogName=async (req,res)=>{
   }
 
   const newDog=new Dog(dogData);
+
 
   try{
     await newDog.save();
@@ -272,11 +277,14 @@ const searchName = async (req, res) => {
 };
 
 const searchDogName=async(req,res)=>{
+  //checking that there is a name
   if(!req.body.name){
     return res.status(400).json({ error: 'Dog Name is required to perform a search' });
   }
 
   let doc;
+
+  //finding the dog in the database
   try{
     doc=await Dog.findOne({name:req.body.name}).exec();
   }catch(err){
@@ -288,6 +296,7 @@ const searchDogName=async(req,res)=>{
     return res.status(404).json({error:'No dogs found'});
   }
 
+  //updating the dog's age
   return updateDogAge(req,res);
 }
 
@@ -336,16 +345,20 @@ const updateLast = (req, res) => {
 };
 
 const updateDogAge=(req,res)=>{
+  //incrementing the dog's age
   const updatePromise=Dog.findOneAndUpdate({'name':req.body.name},{$inc:{'age':1}},{
       returnDocument:'after',
   }).lean().exec();
 
+  //returning the dog's info
   updatePromise.then((doc)=>res.json({
     name:doc.name,
     breed:doc.breed,
     age:doc.age
   }));
 
+
+  //error catch
   updatePromise.catch((err)=>{
     console.log(err);
     return(res.status(500).json({error:'Something went wrong'}));
