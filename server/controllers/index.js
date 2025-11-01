@@ -77,7 +77,7 @@ const hostPage1 = async (req, res) => {
     const docs = await Cat.find({}).lean().exec();
 
     // Once we get back the docs array, we can send it to page1.
-    return res.render('page1', { cats: docs });
+    return res.render('page1', { cats: docs,title:'Cats' });
   } catch (err) {
     /* If our database returns an error, or is unresponsive, we will print that error to
        our console for us to see. We will also send back an error message to the client.
@@ -93,12 +93,22 @@ const hostPage1 = async (req, res) => {
 
 // Function to render the untemplated page2.
 const hostPage2 = (req, res) => {
-  res.render('page2');
+  res.render('page2',{title:'Add Cats'});
 };
 
 // Function to render the untemplated page3.
 const hostPage3 = (req, res) => {
-  res.render('page3');
+  res.render('page3',{title:'Add Dogs'});
+};
+
+const hostPage4=async (req,res)=>{
+  try{
+    const docs=await Dog.find({}).lean().exec();
+    return res.render('page4',{dogs:docs,title:'Dogs'});
+  }catch(err){
+    console.log(err);
+    return res.tatus(500).json({error:'failed to find dogs'});
+  }
 };
 
 // Get name will return the name of the last added cat.
@@ -356,6 +366,7 @@ module.exports = {
   page1: hostPage1,
   page2: hostPage2,
   page3: hostPage3,
+  page4:hostPage4,
   getName,
   setName,
   updateLast,
