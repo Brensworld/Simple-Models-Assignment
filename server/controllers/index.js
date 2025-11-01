@@ -2,7 +2,8 @@
 const models = require('../models');
 
 // get the Cat model
-const { Cat } = models;
+const { Cat, Dog } = models;
+
 
 // Function to handle rendering the index page.
 const hostIndex = async (req, res) => {
@@ -185,6 +186,34 @@ const setName = async (req, res) => {
   }
 };
 
+
+const setDogName=async (req,res)=>{
+  if (!req.body.firstname || !req.body.lastname || !req.body.breed || !req.body.age) {
+    return res.status(400).json({ error: 'firstname, lastname, breed and age are all required' });
+  }
+
+  const dogData={
+    name:`${req.body.firstname} ${req.body.lastname}`,
+    breed:req.body.breed,
+    age:req.body.age,
+  }
+
+  const newDog=new Dog(dogData);
+
+  try{
+    await newDog.save();
+    return res.status(201).json({
+      name: newDog.name,
+      breed:newDog.breed,
+      age:newDog.age
+    });
+  }catch(err){
+    console.log(err);
+    return res.status(500).json({error:'Failed to create dog'});
+  }
+}
+
+
 // Function to handle searching a cat by name.
 const searchName = async (req, res) => {
   /* When the user makes a POST request, bodyParser populates req.body with the parameters
@@ -232,6 +261,26 @@ const searchName = async (req, res) => {
   return res.json({ name: doc.name, beds: doc.bedsOwned });
 };
 
+const searchDogName=async(req,res)=>{
+  if(!req.body.name){
+    return res.status(400).json({ error: 'Dog Name is required to perform a search' });
+  }
+
+  let doc;
+  try{
+    doc=await Dog.findOne({name:req.body.name}).exec();
+  }catch(err){
+    console.log(err);
+    return res.status(500).json({error:'Something went wrong'});
+  }
+
+  if(!doc){
+    return res.status(404).json({error:'No dogs found'});
+  }
+
+  return updateDogAge(req,res);
+}
+
 /* A function for updating the last cat added to the database.
    Usually database updates would be a more involved process, involving finding
    the right element in the database based on query, modifying it, and updating
@@ -276,6 +325,24 @@ const updateLast = (req, res) => {
   });
 };
 
+const updateDogAge=(req,res)=>{
+  const updatePromise=Dog.findOneAndUpdate({'name':req.body.name},{$inc:{'age':1}},{
+      returnDocument:'after',
+  }).lean().exec();
+
+  updatePromise.then((doc)=>res.json({
+    name:doc.name,
+    breed:doc.breed,
+    age:doc.age
+  }));
+
+  updatePromise.catch((err)=>{
+    console.log(err);
+    return(res.status(500).json({error:'Something went wrong'}));
+  });
+  
+}
+
 // A function to send back the 404 page.
 const notFound = (req, res) => {
   res.status(404).render('notFound', {
@@ -294,4 +361,7 @@ module.exports = {
   updateLast,
   searchName,
   notFound,
+  setDogName,
+  searchDogName,
+  updateDogAge
 };
