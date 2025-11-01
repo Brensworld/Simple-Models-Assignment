@@ -4,13 +4,12 @@ const models = require('../models');
 // get the Cat model
 const { Cat, Dog } = models;
 
-
 // Function to handle rendering the index page.
 const hostIndex = async (req, res) => {
-  //Start with the name as unknown
+  // Start with the name as unknown
   let name = 'unknown';
 
-  try{
+  try {
     /* Cat.findOne() will find a cat that matches the query given to it as the first parameter.
        In this case, we give it an empty object so it will match against any object it finds.
        The second parameter is essentially a filter for the values we want. This works similarly
@@ -20,16 +19,16 @@ const hostIndex = async (req, res) => {
        in descending order (so that more recent things are "on the top"). Since we are only
        finding one, this query will either find the most recent cat if it exists, or nothing.
     */
-    const doc = await Cat.findOne({}, {}, { 
-      sort: {'createdDate': 'descending'}
+    const doc = await Cat.findOne({}, {}, {
+      sort: { createdDate: 'descending' },
     }).lean().exec();
 
-    //If we did get a cat back, store it's name in the name variable.
-    if(doc) {
+    // If we did get a cat back, store it's name in the name variable.
+    if (doc) {
       name = doc.name;
     }
   } catch (err) {
-    //Just log out the error for our records.
+    // Just log out the error for our records.
     console.log(err);
   }
 
@@ -77,7 +76,7 @@ const hostPage1 = async (req, res) => {
     const docs = await Cat.find({}).lean().exec();
 
     // Once we get back the docs array, we can send it to page1.
-    return res.render('page1', { cats: docs,title:'Cats' });
+    return res.render('page1', { cats: docs, title: 'Cats' });
   } catch (err) {
     /* If our database returns an error, or is unresponsive, we will print that error to
        our console for us to see. We will also send back an error message to the client.
@@ -93,28 +92,28 @@ const hostPage1 = async (req, res) => {
 
 // Function to render the untemplated page2.
 const hostPage2 = (req, res) => {
-  res.render('page2',{title:'Add Cats'});
+  res.render('page2', { title: 'Add Cats' });
 };
 
 // Function to render the untemplated page3.
 const hostPage3 = (req, res) => {
-  res.render('page3',{title:'Add Dogs'});
+  res.render('page3', { title: 'Add Dogs' });
 };
 
-const hostPage4=async (req,res)=>{
-  try{
-    //find all dogs in the database and send them to page4
-    const docs=await Dog.find({}).lean().exec();
-    return res.render('page4',{dogs:docs,title:'Dogs'});
-  }catch(err){
+const hostPage4 = async (req, res) => {
+  try {
+    // find all dogs in the database and send them to page4
+    const docs = await Dog.find({}).lean().exec();
+    return res.render('page4', { dogs: docs, title: 'Dogs' });
+  } catch (err) {
     console.log(err);
-    return res.tatus(500).json({error:'failed to find dogs'});
+    return res.tatus(500).json({ error: 'failed to find dogs' });
   }
 };
 
 // Get name will return the name of the last added cat.
 const getName = async (req, res) => {
-  try{
+  try {
     /* Here we are trying to do the exact same thing we did in host index up
        above. We want to find the most recently added cat. The only difference
        here is that we are using the query .sort() function rather than passing
@@ -122,21 +121,21 @@ const getName = async (req, res) => {
        functionally the same. We are just seeing that it can be written in
        more than one way.
     */
-    const doc = await Cat.findOne({}).sort({'createdDate': 'descending'}).lean().exec();
+    const doc = await Cat.findOne({}).sort({ createdDate: 'descending' }).lean().exec();
 
-    //If we did get a cat back, store it's name in the name variable.
-    if(doc) {
-      return res.json({name: doc.name});
+    // If we did get a cat back, store it's name in the name variable.
+    if (doc) {
+      return res.json({ name: doc.name });
     }
-    return res.status(404).json({error: 'No cat found'});
+    return res.status(404).json({ error: 'No cat found' });
   } catch (err) {
     /* If an error occurs, it means something went wrong with the database. We will
        give the user a 500 internal server error status code and an error message.
     */
     console.log(err);
-    return res.status(500).json({error: 'Something went wrong contacting the database'});
+    return res.status(500).json({ error: 'Something went wrong contacting the database' });
   }
-}
+};
 
 // Function to create a new cat in the database
 const setName = async (req, res) => {
@@ -197,37 +196,33 @@ const setName = async (req, res) => {
   }
 };
 
-
-const setDogName=async (req,res)=>{
-
-  //making sure all variables are there
+const setDogName = async (req, res) => {
+  // making sure all variables are there
   if (!req.body.firstname || !req.body.lastname || !req.body.breed || !req.body.age) {
     return res.status(400).json({ error: 'firstname, lastname, breed and age are all required' });
   }
 
-  //setting up new data and schema
-  const dogData={
-    name:`${req.body.firstname} ${req.body.lastname}`,
-    breed:req.body.breed,
-    age:req.body.age,
-  }
+  // setting up new data and schema
+  const dogData = {
+    name: `${req.body.firstname} ${req.body.lastname}`,
+    breed: req.body.breed,
+    age: req.body.age,
+  };
 
-  const newDog=new Dog(dogData);
+  const newDog = new Dog(dogData);
 
-
-  try{
+  try {
     await newDog.save();
     return res.status(201).json({
       name: newDog.name,
-      breed:newDog.breed,
-      age:newDog.age
+      breed: newDog.breed,
+      age: newDog.age,
     });
-  }catch(err){
+  } catch (err) {
     console.log(err);
-    return res.status(500).json({error:'Failed to create dog'});
+    return res.status(500).json({ error: 'Failed to create dog' });
   }
-}
-
+};
 
 // Function to handle searching a cat by name.
 const searchName = async (req, res) => {
@@ -276,29 +271,49 @@ const searchName = async (req, res) => {
   return res.json({ name: doc.name, beds: doc.bedsOwned });
 };
 
-const searchDogName=async(req,res)=>{
-  //checking that there is a name
-  if(!req.body.name){
+const updateDogAge = (req, res) => {
+  // incrementing the dog's age
+  const updatePromise = Dog.findOneAndUpdate({ name: req.body.name }, { $inc: { age: 1 } }, {
+    returnDocument: 'after',
+  }).lean().exec();
+
+  // returning the dog's info
+  updatePromise.then((doc) => res.json({
+    name: doc.name,
+    breed: doc.breed,
+    age: doc.age,
+  }));
+
+  // error catch
+  updatePromise.catch((err) => {
+    console.log(err);
+    return (res.status(500).json({ error: 'Something went wrong' }));
+  });
+};
+
+const searchDogName = async (req, res) => {
+  // checking that there is a name
+  if (!req.body.name) {
     return res.status(400).json({ error: 'Dog Name is required to perform a search' });
   }
 
   let doc;
 
-  //finding the dog in the database
-  try{
-    doc=await Dog.findOne({name:req.body.name}).exec();
-  }catch(err){
+  // finding the dog in the database
+  try {
+    doc = await Dog.findOne({ name: req.body.name }).exec();
+  } catch (err) {
     console.log(err);
-    return res.status(500).json({error:'Something went wrong'});
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 
-  if(!doc){
-    return res.status(404).json({error:'No dogs found'});
+  if (!doc) {
+    return res.status(404).json({ error: 'No dogs found' });
   }
 
-  //updating the dog's age
-  return updateDogAge(req,res);
-}
+  // updating the dog's age
+  return updateDogAge(req, res);
+};
 
 /* A function for updating the last cat added to the database.
    Usually database updates would be a more involved process, involving finding
@@ -320,15 +335,15 @@ const updateLast = (req, res) => {
      Finally, findOneAndUpdate would just update the most recent cat it finds that
      matches the query (which could be any cat). So we also need to tell Mongoose to
      sort all the cats in descending order by created date so that we update the
-     most recently added one. The returnDocument key with the 'after' value tells 
+     most recently added one. The returnDocument key with the 'after' value tells
      mongoose to give us back the version of the document AFTER the changes. Otherwise
      it will default to 'before' which gives us the document before the update.
 
      We can use async/await for this, or just use standard promise .then().catch() syntax.
   */
-  const updatePromise = Cat.findOneAndUpdate({}, {$inc: {'bedsOwned': 1}}, {
-    returnDocument: 'after', //Populates doc in the .then() with the version after update
-    sort: {'createdDate': 'descending'}
+  const updatePromise = Cat.findOneAndUpdate({}, { $inc: { bedsOwned: 1 } }, {
+    returnDocument: 'after', // Populates doc in the .then() with the version after update
+    sort: { createdDate: 'descending' },
   }).lean().exec();
 
   // If we successfully save/update them in the database, send back the cat's info.
@@ -344,28 +359,6 @@ const updateLast = (req, res) => {
   });
 };
 
-const updateDogAge=(req,res)=>{
-  //incrementing the dog's age
-  const updatePromise=Dog.findOneAndUpdate({'name':req.body.name},{$inc:{'age':1}},{
-      returnDocument:'after',
-  }).lean().exec();
-
-  //returning the dog's info
-  updatePromise.then((doc)=>res.json({
-    name:doc.name,
-    breed:doc.breed,
-    age:doc.age
-  }));
-
-
-  //error catch
-  updatePromise.catch((err)=>{
-    console.log(err);
-    return(res.status(500).json({error:'Something went wrong'}));
-  });
-  
-}
-
 // A function to send back the 404 page.
 const notFound = (req, res) => {
   res.status(404).render('notFound', {
@@ -379,7 +372,7 @@ module.exports = {
   page1: hostPage1,
   page2: hostPage2,
   page3: hostPage3,
-  page4:hostPage4,
+  page4: hostPage4,
   getName,
   setName,
   updateLast,
@@ -387,5 +380,5 @@ module.exports = {
   notFound,
   setDogName,
   searchDogName,
-  updateDogAge
+  updateDogAge,
 };
